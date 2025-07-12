@@ -1,7 +1,7 @@
 # Updating a book
 
 ```python
-book = Book.objects.all()
+book = Book.objects.get(title='1984')
 ```
 
 ```python

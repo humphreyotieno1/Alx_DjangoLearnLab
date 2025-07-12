@@ -3,11 +3,11 @@
 
 ```python
 from bookshelf.models import Book
-Book.objects.get()
+Book.objects.get(title='1984')
 ```
 
 ```python
-book = Book.objects.get()
+book = Book.objects.get(title='1984')
 ```
 
 ```python
