@@ -1,7 +1,13 @@
 # Retrieving a book
 
+
 ```python
-book = Book.objects.all()
+from bookshelf.models import Book
+Book.objects.get()
+```
+
+```python
+book = Book.objects.get()
 ```
 
 ```python
