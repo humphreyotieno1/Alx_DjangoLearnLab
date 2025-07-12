@@ -21,7 +21,7 @@ book.publication_year
 ```
 
 ```python
-book.title = 'Intro to Django 2'
+book.title = 'Nineteen Eighty-Four'
 book.save()
 ```
 
