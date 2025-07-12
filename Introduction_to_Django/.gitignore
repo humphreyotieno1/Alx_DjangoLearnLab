@@ -1,0 +1,5 @@
+requirements.txt
+venv
+.env
+__pycache__
+LibraryProject/db.sqlite3
