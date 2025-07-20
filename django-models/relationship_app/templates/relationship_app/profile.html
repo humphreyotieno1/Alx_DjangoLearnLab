@@ -1,0 +1,99 @@
+{% extends 'relationship_app/base.html' %}
+
+{% block title %}My Profile - Library Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">My Profile</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <h5 class="mb-3">Personal Information</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_username" class="form-label">Username</label>
+                                <input type="text" name="username" value="{{ user_form.username.value }}" class="form-control" id="id_username" disabled>
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_first_name" class="form-label">First Name</label>
+                                <input type="text" name="first_name" value="{{ user_form.first_name.value|default:'' }}" class="form-control" id="id_first_name">
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_last_name" class="form-label">Last Name</label>
+                                <input type="text" name="last_name" value="{{ user_form.last_name.value|default:'' }}" class="form-control" id="id_last_name">
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_email" class="form-label">Email</label>
+                                <input type="email" name="email" value="{{ user_form.email.value|default:'' }}" class="form-control" id="id_email" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Role</label>
+                                <p class="form-control-plaintext">{{ user.userprofile.get_role_display }}</p>
+                            </div>
+                            {% if user.userprofile.role == 'Librarian' and user.userprofile.library %}
+                            <div class="mb-3">
+                                <label class="form-label">Assigned Library</label>
+                                <p class="form-control-plaintext">{{ user.userprofile.library.name }}</p>
+                            </div>
+                            {% endif %}
+                            <div class="mb-3">
+                                <label class="form-label">Member Since</label>
+                                <p class="form-control-plaintext">{{ user.date_joined|date:"F j, Y" }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Last Login</label>
+                                <p class="form-control-plaintext">
+                                    {{ user.last_login|date:"F j, Y H:i"|default:"Never" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'relationship_app:home' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">Change Password</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'relationship_app:password_change' %}" class="btn btn-warning">
+                    <i class="bi bi-key"></i> Change Password
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add any additional JavaScript for the profile page here
+    document.addEventListener('DOMContentLoaded', function() {
+        // Example: Add confirmation before submitting form
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                // Add any form validation here
+                console.log('Form submitted');
+            });
+        }
+    });
+</script>
+{% endblock %}

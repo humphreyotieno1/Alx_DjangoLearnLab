@@ -1,0 +1,296 @@
+{% extends 'relationship_app/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - Library Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'relationship_app:book_list' %}">Books</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+            </ol>
+        </nav>
+
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">{{ title }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Basic Information -->
+                    <fieldset class="mb-4">
+                        <legend class="h5 border-bottom pb-2 mb-3">Book Information</legend>
+                        <div class="row">
+                            <div class="col-md-12">
+                                {{ form.title|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                {{ form.author|as_crispy_field }}
+                                <small class="form-text text-muted">
+                                    Can't find the author? <a href="#" data-bs-toggle="modal" data-bs-target="#addAuthorModal">Add a new author</a>
+                                </small>
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.publication_year|as_crispy_field }}
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% if form.instance.pk %}{% url 'relationship_app:book_detail' form.instance.pk %}{% else %}{% url 'relationship_app:book_list' %}{% endif %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <div class="btn-group">
+                            <button type="submit" name="save_and_continue" class="btn btn-outline-primary">
+                                <i class="bi bi-save"></i> Save and Continue Editing
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i> Save
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Help Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Help & Tips</h5>
+            </div>
+            <div class="card-body">
+                <h6>Required Fields</h6>
+                <p class="small">Fields marked with an asterisk (*) are required.</p>
+                
+                <h6 class="mt-4">ISBN Format</h6>
+                <p class="small">Enter the 10 or 13-digit ISBN without hyphens or spaces.</p>
+                
+                <h6 class="mt-4">Cover Image</h6>
+                <p class="small">Recommended size: 300x450 pixels. Max file size: 2MB.</p>
+                
+                <h6 class="mt-4">PDF Upload</h6>
+                <p class="small">Upload a PDF version of the book if available. Max file size: 10MB.</p>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        {% if form.instance.pk %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <strong>Created</strong>
+                            <small class="text-muted">{{ form.instance.date_added|timesince }} ago</small>
+                        </div>
+                        <div class="small text-muted">
+                            by {{ form.instance.added_by.get_full_name|default:form.instance.added_by.username }}
+                        </div>
+                    </li>
+                    {% if form.instance.last_modified %}
+                    <li class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <strong>Last Modified</strong>
+                            <small class="text-muted">{{ form.instance.last_modified|timesince }} ago</small>
+                        </div>
+                        <div class="small text-muted">
+                            by {{ form.instance.modified_by.get_full_name|default:form.instance.modified_by.username }}
+                        </div>
+                    </li>
+                    {% endif %}
+                    <li>
+                        <div class="d-flex justify-content-between">
+                            <strong>Total Views</strong>
+                            <span class="badge bg-primary rounded-pill">{{ form.instance.views|default:0 }}</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Author Modal -->
+<div class="modal fade" id="addAuthorModal" tabindex="-1" aria-labelledby="addAuthorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addAuthorModalLabel">Add New Author</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addAuthorForm" method="post" action="{% url 'relationship_app:add_author' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="authorName" class="form-label">Author Name</label>
+                        <input type="text" class="form-control" id="authorName" name="name" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" form="addAuthorForm" class="btn btn-primary">Save Author</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Select2 for author field
+        $('#id_author').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Select an author or type to search',
+            allowClear: true
+        });
+
+        // Handle author form submission
+        const addAuthorForm = document.getElementById('addAuthorForm');
+        if (addAuthorForm) {
+            addAuthorForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const authorName = formData.get('name');
+                
+                fetch('{% url "relationship_app:add_author" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ name: authorName })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Add the new author to the select
+                        const option = new Option(data.name, data.id, true, true);
+                        $('#id_author').append(option).trigger('change');
+                        
+                        // Close the modal and reset the form
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('addAuthorModal'));
+                        modal.hide();
+                        addAuthorForm.reset();
+                        
+                        // Show success message
+                        showAlert('Author added successfully!', 'success');
+                    } else {
+                        showAlert('Error: ' + data.error, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while adding the author.', 'danger');
+                });
+            });
+        }
+
+        // Form validation
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const title = document.getElementById('id_title').value.trim();
+                const author = document.getElementById('id_author').value;
+                const pubYear = document.getElementById('id_publication_year').value.trim();
+                
+                let isValid = true;
+                
+                // Validate title
+                if (!title) {
+                    showFieldError('id_title', 'Title is required');
+                    isValid = false;
+                }
+                
+                // Validate author
+                if (!author) {
+                    showFieldError('id_author', 'Please select an author');
+                    isValid = false;
+                }
+                
+                // Validate publication year
+                if (!pubYear) {
+                    showFieldError('id_publication_year', 'Publication year is required');
+                    isValid = false;
+                } else if (isNaN(pubYear) || parseInt(pubYear) < 1000 || parseInt(pubYear) > 2100) {
+                    showFieldError('id_publication_year', 'Please enter a valid year between 1000 and 2100');
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    showAlert('Please correct the errors in the form.', 'danger');
+                }
+            });
+        }
+        
+        // Helper function to show field errors
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            let errorDiv = field.nextElementSibling;
+            
+            if (!errorDiv || !errorDiv.classList.contains('invalid-feedback')) {
+                errorDiv = document.createElement('div');
+                errorDiv.className = 'invalid-feedback';
+                field.parentNode.insertBefore(errorDiv, field.nextSibling);
+            }
+            
+            field.classList.add('is-invalid');
+            errorDiv.textContent = message;
+        }
+        
+        // Helper function to show alerts
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.role = 'alert';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            // Insert at the top of the form
+            const form = document.querySelector('form');
+            if (form) {
+                form.insertBefore(alertDiv, form.firstChild);
+                
+                // Auto-remove alert after 5 seconds
+                setTimeout(() => {
+                    const alert = bootstrap.Alert.getOrCreateInstance(alertDiv);
+                    alert.close();
+                }, 5000);
+            }
+        }
+        
+        // Clear validation on input
+        document.querySelectorAll('input, select').forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.classList.contains('is-invalid')) {
+                    this.classList.remove('is-invalid');
+                    const errorDiv = this.nextElementSibling;
+                    if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+                        errorDiv.textContent = '';
+                    }
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

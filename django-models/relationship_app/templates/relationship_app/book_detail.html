@@ -1,0 +1,329 @@
+{% extends 'relationship_app/base.html' %}
+
+{% block title %}{{ book.title }} - Library Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'relationship_app:book_list' %}">Books</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ book.title|truncatewords:5 }}</li>
+            </ol>
+        </nav>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <h2 class="card-title mb-1">{{ book.title }}</h2>
+                        <h5 class="text-muted">by {{ book.author.name }}</h5>
+                    </div>
+                    <span class="badge bg-primary">{{ book.publication_year }}</span>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="bg-light p-4 mb-3" style="min-height: 300px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-book" style="font-size: 5rem; opacity: 0.2;"></i>
+                            </div>
+                            {% if book.cover_image %}
+                                <img src="{{ book.cover_image.url }}" class="img-fluid" alt="{{ book.title }} cover">
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="mb-4">
+                            <h5>Description</h5>
+                            <p class="card-text">
+                                {{ book.description|default:"No description available." }}
+                            </p>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5>Details</h5>
+                                <ul class="list-unstyled">
+                                    <li><strong>ISBN:</strong> {{ book.isbn|default:"N/A" }}</li>
+                                    <li><strong>Publisher:</strong> {{ book.publisher|default:"N/A" }}</li>
+                                    <li><strong>Pages:</strong> {{ book.pages|default:"N/A" }}</li>
+                                    <li><strong>Language:</strong> {{ book.language|default:"English" }}</li>
+                                    <li><strong>Genre:</strong> {{ book.genre|default:"N/A" }}</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Availability</h5>
+                                <div class="alert {% if book.available_copies > 0 %}alert-success{% else %}alert-warning{% endif %}">
+                                    {% if book.available_copies > 0 %}
+                                        <i class="bi bi-check-circle"></i> 
+                                        <strong>Available</strong> - {{ book.available_copies }} copy{{ book.available_copies|pluralize }} available
+                                    {% else %}
+                                        <i class="bi bi-exclamation-triangle"></i> 
+                                        <strong>Currently Unavailable</strong>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if book.available_copies > 0 %}
+                                    <button class="btn btn-primary w-100 mb-2">
+                                        <i class="bi bi-cart-plus"></i> Checkout
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-outline-secondary w-100 mb-2">
+                                        <i class="bi bi-bell"></i> Notify When Available
+                                    </button>
+                                {% endif %}
+                                
+                                <button class="btn btn-outline-secondary w-100">
+                                    <i class="bi bi-bookmark-plus"></i> Add to Wishlist
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" id="bookTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab">
+                                    Details
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab">
+                                    Reviews
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="availability-tab" data-bs-toggle="tab" data-bs-target="#availability" type="button" role="tab">
+                                    Availability
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content" id="bookTabsContent">
+                            <div class="tab-pane fade show active" id="details" role="tabpanel">
+                                <h5>About the Book</h5>
+                                <p>{{ book.description|default:"No additional details available." }}</p>
+                                
+                                <h5 class="mt-4">About the Author</h5>
+                                <div class="d-flex align-items-start">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                            <i class="bi bi-person" style="font-size: 2rem; opacity: 0.5;"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h6 class="mt-0">{{ book.author.name }}</h6>
+                                        <p class="text-muted">
+                                            {{ book.author.bio|default:"No biography available." }}
+                                        </p>
+                                        <a href="#" class="btn btn-sm btn-outline-primary">View All Books by This Author</a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="tab-pane fade" id="reviews" role="tabpanel">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="mb-0">Reader Reviews</h5>
+                                    <button class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil"></i> Write a Review
+                                    </button>
+                                </div>
+                                
+                                <div class="text-center py-5">
+                                    <i class="bi bi-chat-square-text" style="font-size: 2rem; opacity: 0.3;"></i>
+                                    <p class="mt-2">No reviews yet. Be the first to review!</p>
+                                </div>
+                            </div>
+                            
+                            <div class="tab-pane fade" id="availability" role="tabpanel">
+                                <h5>Availability at Libraries</h5>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Library</th>
+                                                <th>Status</th>
+                                                <th>Due Date</th>
+                                                <th>Location</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for library in libraries_with_availability %}
+                                            <tr>
+                                                <td>{{ library.name }}</td>
+                                                <td>
+                                                    {% if library.available %}
+                                                        <span class="badge bg-success">Available</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">Checked Out</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ library.due_date|default:"-" }}</td>
+                                                <td>{{ library.location|default:"-" }}</td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="4" class="text-center">No availability information found.</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <span class="text-muted small">
+                            Added on {{ book.date_added|date:"F j, Y" }}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="text-muted small me-3">
+                            <i class="bi bi-eye"></i> {{ book.views|default:0 }} views
+                        </span>
+                        <span class="text-muted small">
+                            <i class="bi bi-star"></i> {{ book.rating|default:"N/A" }}/5.0
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Book Actions</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% if perms.relationship_app.can_change_book %}
+                <a href="{% url 'relationship_app:edit_book' book.id %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-pencil me-2"></i> Edit Book Details
+                </a>
+                {% endif %}
+                
+                {% if perms.relationship_app.can_delete_book %}
+                <a href="{% url 'relationship_app:delete_book' book.id %}" class="list-group-item list-group-item-action text-danger">
+                    <i class="bi bi-trash me-2"></i> Delete This Book
+                </a>
+                {% endif %}
+                
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="bi bi-flag me-2"></i> Report an Issue
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="bi bi-share me-2"></i> Share This Book
+                </a>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Similar Books</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for similar in similar_books %}
+                <a href="{% url 'relationship_app:book_detail' similar.id %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ similar.title }}</h6>
+                        <small class="text-muted">{{ similar.publication_year }}</small>
+                    </div>
+                    <p class="mb-1 small text-muted">by {{ similar.author.name }}</p>
+                </a>
+                {% empty %}
+                <div class="p-3 text-center text-muted">
+                    No similar books found.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Book Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-5">ISBN</dt>
+                    <dd class="col-sm-7">{{ book.isbn|default:"N/A" }}</dd>
+                    
+                    <dt class="col-sm-5">Publisher</dt>
+                    <dd class="col-sm-7">{{ book.publisher|default:"N/A" }}</dd>
+                    
+                    <dt class="col-sm-5">Publication Date</dt>
+                    <dd class="col-sm-7">{{ book.publication_date|date:"F j, Y"|default:"N/A" }}</dd>
+                    
+                    <dt class="col-sm-5">Pages</dt>
+                    <dd class="col-sm-7">{{ book.pages|default:"N/A" }}</dd>
+                    
+                    <dt class="col-sm-5">Language</dt>
+                    <dd class="col-sm-7">{{ book.language|default:"English" }}</dd>
+                    
+                    <dt class="col-sm-5">Genre</dt>
+                    <dd class="col-sm-7">
+                        {% if book.genres.all %}
+                            {% for genre in book.genres.all %}
+                                <span class="badge bg-light text-dark">{{ genre.name }}</span>
+                            {% endfor %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        // Handle tab state in URL
+        if (location.hash) {
+            const triggerTab = document.querySelector(`[data-bs-target="${location.hash}"]`);
+            if (triggerTab) {
+                const tab = new bootstrap.Tab(triggerTab);
+                tab.show();
+            }
+        }
+        
+        // Update URL when tab changes
+        const tabElms = document.querySelectorAll('button[data-bs-toggle="tab"]');
+        tabElms.forEach(tabElm => {
+            tabElm.addEventListener('click', function (e) {
+                const target = e.target.getAttribute('data-bs-target');
+                if (target) {
+                    history.pushState(null, '', target);
+                }
+            });
+        });
+        
+        // Handle back/forward navigation
+        window.addEventListener('popstate', function(e) {
+            if (location.hash) {
+                const triggerTab = document.querySelector(`[data-bs-target="${location.hash}"]`);
+                if (triggerTab) {
+                    const tab = new bootstrap.Tab(triggerTab);
+                    tab.show();
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
