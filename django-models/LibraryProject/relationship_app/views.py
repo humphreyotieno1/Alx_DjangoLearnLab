@@ -26,6 +26,18 @@ from django.contrib.auth import authenticate
 
 UserCreationForm()
 
+@user_passes_test(lambda u: u.is_superuser)
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('home')
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration/register.html', {'form': form})
+
 @require_http_methods(["POST"])
 @csrf_exempt
 def add_author(request):
