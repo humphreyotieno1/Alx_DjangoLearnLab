@@ -23,9 +23,10 @@ def get_books_by_author(author_name):
         QuerySet: All books by the specified author, ordered by publication year
     """
     try:
-        books = Book.objects.filter(
-            author__name__icontains=author_name
-        ).order_by('publication_year')
+        # First get the author object
+        author = Author.objects.get(name=author_name)
+        # Then get all books by this author
+        books = Book.objects.filter(author=author).order_by('publication_year')
         
         if books.exists():
             print(f"\nBooks by {author_name}:")
@@ -35,6 +36,9 @@ def get_books_by_author(author_name):
             print(f"No books found for author: {author_name}")
             
         return books
+    except Author.DoesNotExist:
+        print(f"Author not found: {author_name}")
+        return Book.objects.none()
     except Exception as e:
         print(f"Error finding books by author: {e}")
         return Book.objects.none()
