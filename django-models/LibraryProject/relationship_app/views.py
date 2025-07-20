@@ -20,6 +20,10 @@ from .models import UserProfile
 from .forms import BookForm, LibraryForm, UserRegisterForm, UserProfileForm
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.contrib.auth import logout
+from django.contrib.auth import login
+from django.contrib.auth import authenticate
+
 
 
 @require_http_methods(["POST"])
