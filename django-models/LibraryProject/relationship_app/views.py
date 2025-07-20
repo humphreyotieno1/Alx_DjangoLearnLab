@@ -364,6 +364,13 @@ def home(request):
         return redirect('relationship_app:librarian_view')
     else:
         return redirect('relationship_app:member_view')
+    
+# Logout View
+@login_required
+def logout_view(request):
+    logout(request)
+    return redirect('relationship_app:login')
+
 
 # User Profile View
 @login_required
