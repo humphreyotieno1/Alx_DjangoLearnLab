@@ -18,6 +18,8 @@ from .models import Book
 from .models import Author
 from .models import UserProfile
 from .forms import BookForm, LibraryForm, UserRegisterForm, UserProfileForm
+from django.views.generic.detail import DetailView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
 
 
 @require_http_methods(["POST"])
