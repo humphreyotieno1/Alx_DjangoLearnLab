@@ -25,6 +25,8 @@ urlpatterns = [
     path('member-view/', views.member_view, name='member_view'),
     
     # Book URLs
+    path('add_book/', views.add_book, name='add_book_direct'),
+    path('edit_book/<int:pk>/', views.edit_book, name='edit_book_direct'),
     path('books/', views.book_list, name='book_list'),
     path('books/<int:pk>/', views.BookDetailView.as_view(), name='book_detail'),
     path('books/add/', views.add_book, name='add_book'),
