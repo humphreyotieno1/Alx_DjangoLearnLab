@@ -84,15 +84,14 @@ def get_librarian_for_library(library_name):
     """
     try:
         library = Library.objects.get(name__iexact=library_name)
-        librarian = Librarian.objects.filter(library=library).first()
-        
-        if librarian:
+        try:
+            librarian = Librarian.objects.get(library=library)
             print(f"\nLibrarian for {library_name}:")
             print(f"- {librarian.name}")
-        else:
+            return librarian
+        except Librarian.DoesNotExist:
             print(f"No librarian found for {library_name}")
-            
-        return librarian
+            return None
     except Library.DoesNotExist:
         print(f"Library not found: {library_name}")
         return None
