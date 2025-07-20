@@ -50,7 +50,7 @@ def get_books_in_library(library_name):
         QuerySet: All books in the specified library, ordered by title
     """
     try:
-        library = Library.objects.get(name__iexact=library_name)
+        library = Library.objects.get(name=library_name)
         books = library.books.all().order_by('title')
         
         if books.exists():
