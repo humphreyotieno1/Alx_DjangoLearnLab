@@ -194,7 +194,7 @@ def book_list(request):
         }
         return JsonResponse(data)
     
-    return render(request, 'relationship_app/books/books_list.html', {
+    return render(request, 'relationship_app/books/list_books.html', {
         'books': books,
         'authors': authors
     })
@@ -234,7 +234,7 @@ def add_book(request):
             'errors': form.errors
         }, status=400)
         
-    return render(request, 'relationship_app/books/books_list.html', {
+    return render(request, 'relationship_app/books/list_books.html', {
         'form': form,
         'books': Book.objects.all().order_by('title')
     })
@@ -267,7 +267,7 @@ def edit_book(request, pk):
             'errors': form.errors
         }, status=400)
         
-    return render(request, 'relationship_app/books/books_list.html', {
+    return render(request, 'relationship_app/books/list_books.html', {
         'form': form,
         'books': Book.objects.all().order_by('title')
     })
@@ -331,7 +331,7 @@ def add_library(request):
             return redirect('relationship_app:library_list')
     else:
         form = LibraryForm()
-    return render(request, 'relationship_app/library_form.html', {'form': form, 'title': 'Add Library'})
+    return render(request, 'relationship_app/library_detail.html', {'form': form, 'title': 'Add Library'})
 
 @login_required
 def edit_library(request, pk):
@@ -344,7 +344,7 @@ def edit_library(request, pk):
             return redirect('relationship_app:library_list')
     else:
         form = LibraryForm(instance=library)
-    return render(request, 'relationship_app/library_form.html', {'form': form, 'title': 'Edit Library'})
+    return render(request, 'relationship_app/library_detail.html', {'form': form, 'title': 'Edit Library'})
 
 @login_required
 def delete_library(request, pk):
