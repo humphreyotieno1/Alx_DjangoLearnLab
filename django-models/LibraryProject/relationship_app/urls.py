@@ -39,6 +39,11 @@ urlpatterns = [
     path('libraries/<int:pk>/edit/', views.edit_library, name='edit_library'),
     path('libraries/<int:pk>/delete/', views.delete_library, name='delete_library'),
     
+    # Logout URL
+    path('logout/', auth_views.LogoutView.as_view(template_name='registration/logout.html'), name='logout'),
+    # Login URL
+    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    
     # Password change URLs
     path('password-change/', 
          auth_views.PasswordChangeView.as_view(
