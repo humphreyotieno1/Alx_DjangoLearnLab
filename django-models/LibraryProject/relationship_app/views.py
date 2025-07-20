@@ -13,8 +13,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 import json
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
-from .models import Book, Author, Library, UserProfile
+from .models import Library
+from .models import Book
+from .models import Author
+from .models import UserProfile
 from .forms import BookForm, LibraryForm, UserRegisterForm, UserProfileForm
 
 
