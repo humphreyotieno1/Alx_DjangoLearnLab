@@ -1,0 +1,341 @@
+{% extends 'relationship_app/base.html' %}
+
+{% block title %}Delete Book - {{ book.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'relationship_app:book_list' %}">Books</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'relationship_app:book_detail' book.pk %}">{{ book.title|truncatewords:3 }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Delete</li>
+            </ol>
+        </nav>
+
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Confirm Deletion
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <h5 class="alert-heading">Warning!</h5>
+                    <p class="mb-0">You are about to permanently delete this book. This action cannot be undone.</p>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="row g-0">
+                        <div class="col-md-3 d-flex align-items-center justify-content-center p-3">
+                            {% if book.cover_image %}
+                                <img src="{{ book.cover_image.url }}" class="img-fluid rounded-start" alt="{{ book.title }} cover">
+                            {% else %}
+                                <div class="bg-light p-5 text-center w-100">
+                                    <i class="bi bi-book" style="font-size: 3rem; opacity: 0.3;"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-9">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ book.title }}</h5>
+                                <p class="card-text text-muted">by {{ book.author.name }}</p>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        {% if book.publication_year %}
+                                            Published in {{ book.publication_year }}
+                                        {% endif %}
+                                        {% if book.pages %}
+                                            • {{ book.pages }} pages
+                                        {% endif %}
+                                    </small>
+                                </p>
+                                <p class="card-text">
+                                    {% if book.available_copies > 0 %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> {{ book.available_copies }} available
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-exclamation-triangle"></i> No copies available
+                                        </span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <h5 class="alert-heading">Impact of Deletion</h5>
+                    <ul class="mb-0">
+                        <li>This book will be permanently removed from the system</li>
+                        <li>All associated records (checkouts, reservations, etc.) will be deleted</li>
+                        <li>This action cannot be undone</li>
+                    </ul>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="verification" class="form-label">
+                            Type <strong>DELETE</strong> to confirm
+                        </label>
+                        <input type="text" class="form-control" id="verification" name="verification" 
+                               placeholder="Type DELETE to confirm" required>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'relationship_app:book_detail' book.pk %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                            <i class="bi bi-trash"></i> Delete Permanently
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Related Information -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Related Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Count</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Checkouts</td>
+                                <td>{{ book.checkouts.count|default:0 }}</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#checkoutsModal">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Reservations</td>
+                                <td>{{ book.reservations.count|default:0 }}</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reservationsModal">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Reviews</td>
+                                <td>{{ book.reviews.count|default:0 }}</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reviewsModal">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Checkouts Modal -->
+<div class="modal fade" id="checkoutsModal" tabindex="-1" aria-labelledby="checkoutsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="checkoutsModalLabel">Active Checkouts</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if book.checkouts.all %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Borrower</th>
+                                    <th>Checkout Date</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for checkout in book.checkouts.all %}
+                                <tr>
+                                    <td>{{ checkout.borrower.get_full_name|default:checkout.borrower.username }}</td>
+                                    <td>{{ checkout.checkout_date|date:"M j, Y" }}</td>
+                                    <td>{{ checkout.due_date|date:"M j, Y" }}</td>
+                                    <td>
+                                        {% if checkout.is_overdue %}
+                                            <span class="badge bg-danger">Overdue</span>
+                                        {% else %}
+                                            <span class="badge bg-success">On Loan</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle"></i> No active checkouts for this book.
+                    </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reservations Modal -->
+<div class="modal fade" id="reservationsModal" tabindex="-1" aria-labelledby="reservationsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reservationsModalLabel">Active Reservations</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if book.reservations.all %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Patron</th>
+                                    <th>Reservation Date</th>
+                                    <th>Status</th>
+                                    <th>Expires</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reservation in book.reservations.all %}
+                                <tr>
+                                    <td>{{ reservation.patron.get_full_name|default:reservation.patron.username }}</td>
+                                    <td>{{ reservation.reservation_date|date:"M j, Y" }}</td>
+                                    <td>
+                                        {% if reservation.is_active %}
+                                            <span class="badge bg-primary">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Fulfilled/Cancelled</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ reservation.expiry_date|date:"M j, Y"|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle"></i> No active reservations for this book.
+                    </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reviews Modal -->
+<div class="modal fade" id="reviewsModal" tabindex="-1" aria-labelledby="reviewsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reviewsModalLabel">Book Reviews</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if book.reviews.all %}
+                    {% for review in book.reviews.all %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <div>
+                                    <h6 class="mb-0">{{ review.reviewer.get_full_name|default:review.reviewer.username }}</h6>
+                                    <div class="text-warning">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <i class="bi bi-star-fill"></i>
+                                            {% else %}
+                                                <i class="bi bi-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ review.created_at|timesince }} ago</small>
+                            </div>
+                            <p class="card-text">{{ review.comment }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle"></i> No reviews for this book yet.
+                    </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enable/disable delete button based on verification
+        const verificationInput = document.getElementById('verification');
+        const deleteButton = document.getElementById('deleteButton');
+        
+        if (verificationInput && deleteButton) {
+            verificationInput.addEventListener('input', function() {
+                deleteButton.disabled = this.value.trim().toUpperCase() !== 'DELETE';
+            });
+        }
+        
+        // Confirm before leaving the page if the form has been modified
+        const form = document.querySelector('form');
+        if (form) {
+            let formChanged = false;
+            
+            // Check for form changes
+            form.querySelectorAll('input, select, textarea').forEach(function(element) {
+                element.addEventListener('change', function() {
+                    formChanged = true;
+                });
+            });
+            
+            // Warn before leaving if changes were made
+            window.addEventListener('beforeunload', function(e) {
+                if (formChanged) {
+                    const confirmationMessage = 'You have unsaved changes. Are you sure you want to leave?';
+                    (e || window.event).returnValue = confirmationMessage;
+                    return confirmationMessage;
+                }
+            });
+            
+            // Reset form changed flag on form submission
+            form.addEventListener('submit', function() {
+                formChanged = false;
+            });
+        }
+    });
+</script>
+{% endblock %}

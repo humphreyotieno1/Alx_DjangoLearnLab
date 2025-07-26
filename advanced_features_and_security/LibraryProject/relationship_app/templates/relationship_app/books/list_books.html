@@ -1,0 +1,383 @@
+{% extends 'relationship_app/base.html' %}
+{% load static %}
+
+{% block title %}Books - Library Management System{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap5.min.css">
+<style>
+    .dataTables_wrapper .dataTables_filter {
+        float: right;
+    }
+    .dataTables_wrapper .dataTables_length {
+        float: left;
+    }
+    .dt-buttons {
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Books Management</h2>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBookModal">
+            <i class="bi bi-plus-lg"></i> Add New Book
+        </button>
+    </div>
+
+    <!-- Bulk Actions -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Books List</h5>
+            <div class="btn-group" id="bulkActions" style="display: none;">
+                <button type="button" class="btn btn-sm btn-outline-danger" id="deleteSelected">
+                    <i class="bi bi-trash"></i> Delete Selected
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <table id="booksTable" class="table table-striped" style="width:100%">
+                <thead>
+                    <tr>
+                        <th width="5%">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAll">
+                            </div>
+                        </th>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Publication Year</th>
+                        <th>Added On</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for book in books %}
+                    <tr data-id="{{ book.id }}">
+                        <td>
+                            <div class="form-check">
+                                <input class="form-check-input row-checkbox" type="checkbox" value="{{ book.id }}">
+                            </div>
+                        </td>
+                        <td>{{ book.title }}</td>
+                        <td>{{ book.author.name }}</td>
+                        <td>{{ book.publication_year }}</td>
+                        <td>{{ book.published_date|date:"M d, Y" }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary edit-book" 
+                                    data-id="{{ book.id }}"
+                                    data-title="{{ book.title }}"
+                                    data-author="{{ book.author.id }}"
+                                    data-year="{{ book.publication_year }}">
+                                <i class="bi bi-pencil"></i> Edit
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-book" data-id="{{ book.id }}">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Book Modal -->
+<div class="modal fade" id="bookModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Add New Book</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="bookForm">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <input type="hidden" id="bookId" name="id">
+                    
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                        <div class="invalid-feedback">Please provide a title.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="author" class="form-label">Author</label>
+                        <select class="form-select" id="author" name="author" required>
+                            <option value="">Select an author</option>
+                            {% for author in authors %}
+                                <option value="{{ author.id }}">{{ author.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            Can't find the author? 
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#addAuthorModal">Add a new author</a>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="publication_year" class="form-label">Publication Year</label>
+                        <input type="number" class="form-control" id="publication_year" 
+                               name="publication_year" min="1000" max="2100" required>
+                        <div class="invalid-feedback">Please provide a valid year between 1000 and 2100.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveBook">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Author Modal -->
+<div class="modal fade" id="addAuthorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Author</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addAuthorForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="authorName" class="form-label">Author Name</label>
+                        <input type="text" class="form-control" id="authorName" name="name" required>
+                        <div class="invalid-feedback">Please provide an author name.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Author</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize DataTable with export buttons
+    const table = $('#booksTable').DataTable({
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ],
+        columnDefs: [
+            { orderable: false, targets: [0, 5] },
+            { searchable: false, targets: [0, 4, 5] }
+        ],
+        order: [[1, 'asc']],
+        responsive: true
+    });
+
+    // Handle select all checkbox
+    $('#selectAll').on('change', function() {
+        $('.row-checkbox').prop('checked', this.checked);
+        toggleBulkActions();
+    });
+
+    // Handle individual row checkboxes
+    $(document).on('change', '.row-checkbox', function() {
+        if (!this.checked) {
+            $('#selectAll').prop('checked', false);
+        } else if ($('.row-checkbox:checked').length === $('.row-checkbox').length) {
+            $('#selectAll').prop('checked', true);
+        }
+        toggleBulkActions();
+    });
+
+    // Toggle bulk actions buttons
+    function toggleBulkActions() {
+        const checkedCount = $('.row-checkbox:checked').length;
+        if (checkedCount > 0) {
+            $('#bulkActions').show();
+        } else {
+            $('#bulkActions').hide();
+        }
+    }
+
+    // Handle add new book button
+    $('[data-bs-target="#addBookModal"]').on('click', function() {
+        $('#modalTitle').text('Add New Book');
+        $('#bookForm')[0].reset();
+        $('#bookId').val('');
+        $('#bookModal').modal('show');
+    });
+
+    // Handle edit book button
+    $(document).on('click', '.edit-book', function() {
+        const id = $(this).data('id');
+        const title = $(this).data('title');
+        const author = $(this).data('author');
+        const year = $(this).data('year');
+
+        $('#modalTitle').text('Edit Book');
+        $('#bookId').val(id);
+        $('#title').val(title);
+        $('#author').val(author).trigger('change');
+        $('#publication_year').val(year);
+        
+        $('#bookModal').modal('show');
+    });
+
+    // Handle save book form
+    $('#bookForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const isEdit = !!$('#bookId').val();
+        const url = isEdit ? '{% url "relationship_app:edit_book" 0 %}'.replace('0', $('#bookId').val()) 
+                          : '{% url "relationship_app:add_book" %}';
+        
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    $('#bookModal').modal('hide');
+                    showAlert('Book ' + (isEdit ? 'updated' : 'added') + ' successfully!', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showAlert(response.error || 'An error occurred', 'danger');
+                }
+            },
+            error: function(xhr) {
+                showAlert(xhr.responseJSON?.error || 'An error occurred', 'danger');
+            }
+        });
+    });
+
+    // Handle add author form
+    $('#addAuthorForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const name = $('#authorName').val().trim();
+        
+        if (!name) {
+            showAlert('Author name is required', 'danger');
+            return;
+        }
+        
+        $.ajax({
+            url: '{% url "relationship_app:add_author" %}',
+            type: 'POST',
+            data: JSON.stringify({ name: name }),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.success) {
+                    // Add new author to select and select it
+                    $('#author').append(new Option(response.name, response.id, true, true)).trigger('change');
+                    $('#addAuthorModal').modal('hide');
+                    $('#addAuthorForm')[0].reset();
+                    showAlert('Author added successfully!', 'success');
+                } else {
+                    showAlert(response.error || 'An error occurred', 'danger');
+                }
+            },
+            error: function(xhr) {
+                showAlert(xhr.responseJSON?.error || 'An error occurred', 'danger');
+            }
+        });
+    });
+
+    // Handle delete book
+    $(document).on('click', '.delete-book', function() {
+        if (confirm('Are you sure you want to delete this book?')) {
+            const id = $(this).data('id');
+            
+            $.ajax({
+                url: '{% url "relationship_app:delete_book" 0 %}'.replace('0', id),
+                type: 'POST',
+                data: {
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('Book deleted successfully!', 'success');
+                        table.row($(`[data-id="${id}"]`).closest('tr')).remove().draw();
+                    } else {
+                        showAlert(response.error || 'An error occurred', 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('An error occurred', 'danger');
+                }
+            });
+        }
+    });
+
+    // Handle bulk delete
+    $('#deleteSelected').on('click', function() {
+        const selectedIds = [];
+        $('.row-checkbox:checked').each(function() {
+            selectedIds.push($(this).val());
+        });
+
+        if (selectedIds.length === 0) return;
+
+        if (confirm(`Are you sure you want to delete ${selectedIds.length} selected book(s)?`)) {
+            $.ajax({
+                url: '{% url "relationship_app:bulk_delete_books" %}',
+                type: 'POST',
+                data: {
+                    'ids': selectedIds,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showAlert(`${response.count} book(s) deleted successfully!`, 'success');
+                        selectedIds.forEach(id => {
+                            table.row($(`[data-id="${id}"]`).closest('tr')).remove().draw();
+                        });
+                        $('#selectAll').prop('checked', false);
+                        toggleBulkActions();
+                    } else {
+                        showAlert(response.error || 'An error occurred', 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('An error occurred', 'danger');
+                }
+            });
+        }
+    });
+
+    // Show alert message
+    function showAlert(message, type) {
+        const alert = $(`
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `);
+        
+        $('.container-fluid').prepend(alert);
+        
+        // Auto-remove alert after 5 seconds
+        setTimeout(() => {
+            alert.alert('close');
+        }, 5000);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,194 @@
+{% extends 'relationship_app/base.html' %}
+
+{% block title %}Librarian Dashboard - Library Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Librarian Dashboard</h2>
+    <div>
+        <a href="{% url 'relationship_app:add_book' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add Book
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">My Library</h5>
+            </div>
+            <div class="card-body">
+                {% if user.userprofile.library %}
+                    <h4>{{ user.userprofile.library.name }}</h4>
+                    <p class="text-muted">
+                        <i class="bi bi-book"></i> {{ user.userprofile.library.books.count }} books
+                    </p>
+                    <a href="{% url 'relationship_app:library_detail' user.userprofile.library.id %}" class="btn btn-outline-primary">
+                        View Library Details
+                    </a>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> No library assigned to you.
+                    </div>
+                    <p>Please contact the administrator to assign you to a library.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Quick Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="p-3 border rounded">
+                            <h3 class="mb-0">{{ available_books_count }}</h3>
+                            <small class="text-muted">Available Books</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="p-3 border rounded">
+                            <h3 class="mb-0">{{ borrowed_books_count }}</h3>
+                            <small class="text-muted">Borrowed Books</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 border rounded">
+                            <h3 class="mb-0">{{ total_members }}</h3>
+                            <small class="text-muted">Total Members</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 border rounded">
+                            <h3 class="mb-0">{{ overdue_books_count }}</h3>
+                            <small class="text-muted">Overdue Books</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">Recent Book Checkouts</h5>
+    </div>
+    <div class="card-body">
+        {% if recent_checkouts %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Book</th>
+                            <th>Member</th>
+                            <th>Checkout Date</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for checkout in recent_checkouts %}
+                        <tr>
+                            <td>{{ checkout.book.title }}</td>
+                            <td>{{ checkout.user.get_full_name|default:checkout.user.username }}</td>
+                            <td>{{ checkout.checkout_date|date:"M d, Y" }}</td>
+                            <td>{{ checkout.due_date|date:"M d, Y" }}</td>
+                            <td>
+                                {% if checkout.is_overdue %}
+                                    <span class="badge bg-danger">Overdue</span>
+                                {% elif checkout.return_date %}
+                                    <span class="badge bg-secondary">Returned</span>
+                                {% else %}
+                                    <span class="badge bg-success">Borrowed</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-end mt-3">
+                <a href="#" class="btn btn-outline-primary">View All Checkouts</a>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-journal-check" style="font-size: 2rem; opacity: 0.5;"></i>
+                <p class="mt-2 mb-0">No recent checkouts found.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'relationship_app:add_book' %}" class="btn btn-outline-primary text-start">
+                        <i class="bi bi-plus-circle me-2"></i> Add New Book
+                    </a>
+                    <a href="#" class="btn btn-outline-success text-start">
+                        <i class="bi bi-arrow-repeat me-2"></i> Process Returns
+                    </a>
+                    <a href="#" class="btn btn-outline-info text-start">
+                        <i class="bi bi-people me-2"></i> Manage Members
+                    </a>
+                    <a href="#" class="btn btn-outline-warning text-start">
+                        <i class="bi bi-envelope me-2"></i> Send Overdue Notices
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Upcoming Due Dates</h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_due_dates %}
+                    <div class="list-group">
+                        {% for checkout in upcoming_due_dates %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ checkout.book.title }}</h6>
+                                <small class="text-{% if checkout.is_due_soon %}warning{% else %}muted{% endif %}">
+                                    Due {{ checkout.due_date|timeuntil }}
+                                </small>
+                            </div>
+                            <p class="mb-1 small">
+                                Borrowed by {{ checkout.user.get_full_name|default:checkout.user.username }}
+                            </p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-calendar-check" style="font-size: 2rem; opacity: 0.5;"></i>
+                        <p class="mt-2 mb-0">No upcoming due dates.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add any librarian dashboard specific JavaScript here
+    document.addEventListener('DOMContentLoaded', function() {
+        // Example: Initialize any librarian dashboard components
+        console.log('Librarian dashboard loaded');
+    });
+</script>
+{% endblock %}

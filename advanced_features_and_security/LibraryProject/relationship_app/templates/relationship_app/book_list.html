@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Book List{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Book List</h1>
+        {% if can_add_book %}
+        <a href="{% url 'relationship_app:add_book' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Book
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Search Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="form-inline">
+                <div class="input-group w-100">
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Search by title, author, or year..." 
+                           value="{{ search_query|default:'' }}">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Book List -->
+    <div class="card">
+        <div class="card-body">
+            {% if books %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Publication Year</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for book in books %}
+                            <tr>
+                                <td>{{ book.title }}</td>
+                                <td>{{ book.author.name }}</td>
+                                <td>{{ book.publication_year }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'relationship_app:book_detail' book.pk %}" 
+                                           class="btn btn-sm btn-info" data-toggle="tooltip" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if can_edit_book %}
+                                        <a href="{% url 'relationship_app:edit_book' book.pk %}" 
+                                           class="btn btn-sm btn-warning" data-toggle="tooltip" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if can_delete_book %}
+                                        <form method="post" action="{% url 'relationship_app:delete_book' book.pk %}" 
+                                              class="d-inline" onsubmit="return confirm('Are you sure you want to delete this book?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-danger" data-toggle="tooltip" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if books.has_other_pages %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if books.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">&laquo; First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ books.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in books.paginator.page_range %}
+                            {% if books.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > books.number|add:'-3' and num < books.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if books.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ books.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ books.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">Last &raquo;</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info">No books found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Initialize tooltips
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+});
+
+// Bulk delete functionality
+$(document).ready(function() {
+    $('#bulkDeleteBtn').click(function() {
+        const selectedBooks = [];
+        $('.book-checkbox:checked').each(function() {
+            selectedBooks.push($(this).val());
+        });
+
+        if (selectedBooks.length === 0) {
+            alert('Please select at least one book to delete.');
+            return false;
+        }
+
+        if (confirm(`Are you sure you want to delete ${selectedBooks.length} selected book(s)?`)) {
+            $.ajax({
+                url: '{% url "relationship_app:bulk_delete_books" %}',
+                method: 'POST',
+                data: JSON.stringify({ book_ids: selectedBooks }),
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRFTTOKEN': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('An error occurred while deleting books.');
+                    console.error(error);
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

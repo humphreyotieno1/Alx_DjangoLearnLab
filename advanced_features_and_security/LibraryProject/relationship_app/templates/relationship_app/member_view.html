@@ -1,0 +1,185 @@
+{% extends 'relationship_app/base.html' %}
+
+{% block title %}Member Dashboard - Library Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Welcome, {{ user.get_full_name|default:user.username }}!</h5>
+                    <span class="badge bg-light text-primary">{{ user.userprofile.get_role_display }}</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="p-3 mb-3 border rounded bg-light">
+                            <h6 class="text-muted mb-1">Books Checked Out</h6>
+                            <h3 class="mb-0">{{ checked_out_books_count }}</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 mb-3 border rounded bg-light">
+                            <h6 class="text-muted mb-1">Books on Hold</h6>
+                            <h3 class="mb-0">{{ on_hold_books_count }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> 
+                    You have {{ available_books_count }} books available for checkout from our collection.
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">My Checked Out Books</h5>
+            </div>
+            <div class="card-body">
+                {% if checked_out_books %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Book</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for checkout in checked_out_books %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ checkout.book.title }}</strong><br>
+                                        <small class="text-muted">by {{ checkout.book.author.name }}</small>
+                                    </td>
+                                    <td>{{ checkout.due_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if checkout.is_overdue %}
+                                            <span class="badge bg-danger">Overdue</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Due in {{ checkout.days_until_due }} days</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-arrow-return-right"></i> Return
+                                        </a>
+                                        <a href="#" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-arrow-clockwise"></i> Renew
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-book" style="font-size: 2rem; opacity: 0.5;"></i>
+                        <p class="mt-2 mb-0">You don't have any books checked out.</p>
+                        <a href="{% url 'relationship_app:book_list' %}" class="btn btn-primary mt-3">
+                            <i class="bi bi-search"></i> Browse Books
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Quick Links</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="{% url 'relationship_app:book_list' %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-book me-2"></i> Browse All Books
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="bi bi-search me-2"></i> Search Catalog
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="bi bi-clock-history me-2"></i> Reading History
+                </a>
+                <a href="{% url 'relationship_app:profile' %}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-person me-2"></i> My Profile
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="bi bi-question-circle me-2"></i> Help & Support
+                </a>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">My Holds</h5>
+            </div>
+            <div class="card-body">
+                {% if on_hold_books %}
+                    <div class="list-group">
+                        {% for hold in on_hold_books %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ hold.book.title }}</h6>
+                                <small>#{{ hold.queue_position }} in line</small>
+                            </div>
+                            <p class="mb-1 small">by {{ hold.book.author.name }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">Placed on {{ hold.hold_date|date:"M d, Y" }}</small>
+                                <button class="btn btn-sm btn-outline-danger">Cancel</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="bi bi-bookmark" style="font-size: 2rem; opacity: 0.5;"></i>
+                        <p class="mt-2 mb-0">You don't have any books on hold.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Library Hours</h5>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Monday - Thursday
+                        <span class="badge bg-primary rounded-pill">9:00 AM - 9:00 PM</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Friday
+                        <span class="badge bg-primary rounded-pill">9:00 AM - 6:00 PM</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Saturday
+                        <span class="badge bg-primary rounded-pill">10:00 AM - 5:00 PM</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Sunday
+                        <span class="badge bg-primary rounded-pill">1:00 PM - 5:00 PM</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add any member dashboard specific JavaScript here
+    document.addEventListener('DOMContentLoaded', function() {
+        // Example: Initialize any member dashboard components
+        console.log('Member dashboard loaded');
+    });
+</script>
+{% endblock %}
