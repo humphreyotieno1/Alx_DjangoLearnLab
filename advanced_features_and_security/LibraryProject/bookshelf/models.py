@@ -1,5 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser, BaseUserManager, Permission, Group
+from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import gettext_lazy as _
 import os
 
@@ -63,3 +64,75 @@ class CustomUser(AbstractUser):
     
     def __str__(self):
         return self.username
+
+
+class Book(models.Model):
+    """
+    Book model representing a book in the library system.
+    Includes custom permissions for book management.
+    """
+    title = models.CharField(
+        _('title'),
+        max_length=200,
+        help_text=_('The title of the book')
+    )
+    author = models.CharField(
+        _('author'),
+        max_length=100,
+        help_text=_('The author of the book')
+    )
+    isbn = models.CharField(
+        _('ISBN'),
+        max_length=13,
+        unique=True,
+        help_text=_('13 Character <a href="https://www.isbn-international.org/content/what-isbn">ISBN number</a>')
+    )
+    published_date = models.DateField(
+        _('published date'),
+        null=True,
+        blank=True
+    )
+    description = models.TextField(
+        _('description'),
+        blank=True,
+        help_text=_('Brief description of the book')
+    )
+    created_at = models.DateTimeField(
+        _('created at'),
+        auto_now_add=True
+    )
+    updated_at = models.DateTimeField(
+        _('updated at'),
+        auto_now=True
+    )
+
+    class Meta:
+        verbose_name = _('book')
+        verbose_name_plural = _('books')
+        permissions = [
+            ('can_create', 'Can create book'),
+            ('can_edit', 'Can edit book'),
+            ('can_delete', 'Can delete book'),
+            ('can_view_all', 'Can view all books'),
+        ]
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        """
+        Override save to ensure custom permissions are created.
+        """
+        super().save(*args, **kwargs)
+        
+        # Ensure content type is created for the model
+        content_type = ContentType.objects.get_for_model(self.__class__)
+        
+        # Create custom permissions if they don't exist
+        for codename, name in self._meta.permissions:
+            Permission.objects.get_or_create(
+                codename=codename,
+                content_type=content_type,
+                defaults={'name': name}
+            )
