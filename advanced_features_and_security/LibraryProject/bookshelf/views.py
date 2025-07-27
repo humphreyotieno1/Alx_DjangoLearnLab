@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from .models import Book
+from .forms import ExampleForm, BookForm
 
 @login_required
 def book_list(request):
