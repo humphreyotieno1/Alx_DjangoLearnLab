@@ -12,16 +12,35 @@ class AuthorListCreateView(generics.ListCreateAPIView):
     serializer_class = AuthorSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class AuthorDetailView(generics.RetrieveUpdateDestroyAPIView):
+class AuthorRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class BookListCreateView(generics.ListCreateAPIView):
+class BookListView(generics.ListAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class BookDetailView(generics.RetrieveUpdateDestroyAPIView):
+class BookDetailView(generics.RetrieveAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'pk'
+
+class BookCreateView(generics.CreateAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class BookUpdateView(generics.UpdateAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'pk'
+
+class BookDestroyView(generics.DestroyAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'pk'
