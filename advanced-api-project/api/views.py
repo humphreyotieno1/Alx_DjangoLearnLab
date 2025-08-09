@@ -1,6 +1,7 @@
 # generic views
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
+from rest_framework import filters
 
 from .models import Author, Book
 from .serializers import AuthorSerializer, BookSerializer
@@ -27,15 +28,47 @@ class AuthorRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         return obj.user == request.user
 
 class BookListView(generics.ListAPIView):
+    """
+    API view for listing and searching books.
+    
+    Supports:
+    - Filtering by author ID and publication year
+    - Searching by title and author name
+    - Ordering by title, publication year, and author name
+    """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
+    
+    # Configure filter backends
+    filter_backends = [
+        filters.DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
+    
+    # Define filter fields
+    filterset_fields = {
+        'author': ['exact'],
+        'publication_year': ['exact', 'gt', 'lt', 'gte', 'lte'],
+    }
+    
+    # Define search fields
+    search_fields = ['title', 'author__name']
+    
+    # Define ordering fields
+    ordering_fields = ['title', 'publication_year', 'author__name']
+    ordering = ['title']  # Default ordering
+    
     def get_queryset(self):
-        queryset = Book.objects.all()
-        author = self.request.query_params.get('author')
-        if author is not None:
-            queryset = queryset.filter(author=author)
+        """
+        Optionally filter the books by author if provided in query params.
+        This is in addition to the filtering provided by DjangoFilterBackend.
+        """
+        queryset = super().get_queryset()
+        author_id = self.request.query_params.get('author_id')
+        if author_id is not None:
+            queryset = queryset.filter(author_id=author_id)
         return queryset
 
 class BookDetailView(generics.RetrieveAPIView):
