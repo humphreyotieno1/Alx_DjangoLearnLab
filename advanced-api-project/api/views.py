@@ -61,14 +61,3 @@ class BookUpdateView(generics.UpdateAPIView):
         if request.method in permissions.SAFE_METHODS:
             return True
         return obj.user == request.user
-
-class BookDestroyView(generics.DestroyAPIView):
-    queryset = Book.objects.all()
-    serializer_class = BookSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    lookup_field = 'pk'
-
-    def check_object_permissions(self, request, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return obj.user == request.user
