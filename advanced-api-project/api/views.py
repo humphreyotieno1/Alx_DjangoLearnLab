@@ -4,10 +4,10 @@ Views for the API application.
 This module contains the views for handling Book and Author resources,
 including CRUD operations, filtering, searching, and ordering.
 """
-from rest_framework import generics, status, permissions, filters
-from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics, status, filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import rest_framework
 
 from .models import Author, Book
 from .serializers import AuthorSerializer, BookSerializer
@@ -49,7 +49,7 @@ class AuthorRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     def check_object_permissions(self, request, obj):
         """Check if the user has permission to modify the author."""
         super().check_object_permissions(request, obj)
-        if request.method not in permissions.SAFE_METHODS and obj.user != request.user:
+        if request.method not in filters.SAFE_METHODS and obj.user != request.user:
             self.permission_denied(
                 request,
                 message="You do not have permission to perform this action.",
