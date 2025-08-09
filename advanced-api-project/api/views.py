@@ -4,6 +4,7 @@ from rest_framework.response import Response
 
 from .models import Author, Book
 from .serializers import AuthorSerializer, BookSerializer
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 
 # views
 
