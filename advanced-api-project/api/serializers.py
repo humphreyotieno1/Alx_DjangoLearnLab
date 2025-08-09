@@ -24,7 +24,7 @@ class AuthorSerializer(serializers.ModelSerializer):
     representation of the related book objects.
     """
 
-    books = serializers.StringRelatedField(many=True)
+    books = serializers.StringRelatedField(many=True, read_only=True)
     
     class Meta:
         """
