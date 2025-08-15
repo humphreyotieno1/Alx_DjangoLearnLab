@@ -12,5 +12,41 @@
         </p>
     {% endif %}
     <p><a href="{% url 'post_list' %}">Back to Posts</a></p>
+
+    <h3>Comments</h3>
+    {% for comment in post.comments.all %}
+        <article>
+            <p>{{ comment.content }}</p>
+            <p>By {{ comment.author.username }} on {{ comment.created_at|date:"F d, Y H:i" }}</p>
+            {% if comment.updated_at != comment.created_at %}
+                <p><small>Edited on {{ comment.updated_at|date:"F d, Y H:i" }}</small></p>
+            {% endif %}
+            {% if user == comment.author %}
+                <p>
+                    <a href="{% url 'comment_update' post.pk comment.pk %}">Edit</a> |
+                    <a href="{% url 'comment_delete' post.pk comment.pk %}">Delete</a>
+                </p>
+            {% endif %}
+        </article>
+        <hr>
+    {% empty %}
+        <p>No comments yet.</p>
+    {% endfor %}
+
+    {% if user.is_authenticated %}
+        <h4>Add a Comment</h4>
+        {% if messages %}
+            {% for message in messages %}
+                <p class="{{ message.tags }}">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+        <form method="post" action="{% url 'comment_create' post.pk %}">
+            {% csrf_token %}
+            {{ comment_form.as_p }}
+            <button type="submit">Post Comment</button>
+        </form>
+    {% else %}
+        <p><a href="{% url 'login' %}">Log in</a> to post a comment.</p>
+    {% endif %}
 </div>
 {% endblock %}

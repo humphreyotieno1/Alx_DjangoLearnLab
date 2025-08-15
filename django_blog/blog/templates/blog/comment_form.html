@@ -1,0 +1,18 @@
+{% extends 'blog/base.html' %}
+{% block title %}{% if form.instance.pk %}Edit Comment{% else %}New Comment{% endif %}{% endblock %}
+{% block content %}
+<div class="content">
+    <h2>{% if form.instance.pk %}Edit Comment{% else %}New Comment{% endif %}</h2>
+    {% if messages %}
+        {% for message in messages %}
+            <p class="{{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save</button>
+    </form>
+    <p><a href="{% url 'post_detail' post_id %}">Back to Post</a></p>
+</div>
+{% endblock %}
