@@ -113,6 +113,15 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         post = self.get_object()
         return self.request.user == post.author
 
+    def get_object(self, queryset=None):
+        try:
+            return super().get_object(queryset)
+        except Post.DoesNotExist:
+            raise Http404("Post does not exist")
+
+    def get_success_url(self):
+        return reverse_lazy('post_detail', kwargs={'pk': self.get_object().pk})
+
 class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Post
     template_name = 'blog/post_confirm_delete.html'
