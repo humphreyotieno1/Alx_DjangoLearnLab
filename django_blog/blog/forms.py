@@ -18,7 +18,7 @@ class PostForm(forms.ModelForm):
         widgets = {
             'title': forms.TextInput(attrs={'placeholder': 'Enter post title'}),
             'content': forms.Textarea(attrs={'placeholder': 'Write your post content here'}),
-            'tags': TagWidget(attrs={'placeholder': 'Enter tags, separated by commas'}),
+            'tags': TagWidget(),
         }
 
     def clean_title(self):
