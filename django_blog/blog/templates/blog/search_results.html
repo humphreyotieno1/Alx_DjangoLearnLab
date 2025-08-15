@@ -1,15 +1,12 @@
 {% extends 'blog/base.html' %}
-{% block title %}Blog Posts{% endblock %}
+{% block title %}Search Results{% endblock %}
 {% block content %}
 <div class="content">
-    <h2>Blog Posts</h2>
+    <h2>Search Results for "{{ query }}"</h2>
     <form method="get" action="{% url 'search' %}" class="search-form">
-        <input type="text" name="q" placeholder="Search posts..." value="{{ request.GET.q }}">
+        <input type="text" name="q" placeholder="Search posts..." value="{{ query }}">
         <button type="submit">Search</button>
     </form>
-    {% if user.is_authenticated %}
-        <p><a href="{% url 'post_create' %}">Create New Post</a></p>
-    {% endif %}
     {% for post in posts %}
         <article>
             <h3><a href="{% url 'post_detail' post.pk %}">{{ post.title }}</a></h3>
@@ -22,16 +19,11 @@
                     {% endfor %}
                 </p>
             {% endif %}
-            {% if user == post.author %}
-                <p>
-                    <a href="{% url 'post_update' post.pk %}">Edit</a> |
-                    <a href="{% url 'post_delete' post.pk %}">Delete</a>
-                </p>
-            {% endif %}
         </article>
         <hr>
     {% empty %}
-        <p>No posts available.</p>
+        <p>No posts found for query "{{ query }}".</p>
     {% endfor %}
+    <p><a href="{% url 'post_list' %}">Back to all posts</a></p>
 </div>
 {% endblock %}

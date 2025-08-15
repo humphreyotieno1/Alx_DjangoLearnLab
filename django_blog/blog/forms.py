@@ -10,13 +10,17 @@ class CustomUserCreationForm(UserCreationForm):
         model = User
         fields = ['username', 'email', 'password1', 'password2']
 
+from django import forms
+from .models import Post, Comment
+
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ['title', 'content']
+        fields = ['title', 'content', 'tags']
         widgets = {
             'title': forms.TextInput(attrs={'placeholder': 'Enter post title'}),
             'content': forms.Textarea(attrs={'placeholder': 'Write your post content here'}),
+            'tags': forms.TextInput(attrs={'placeholder': 'Enter tags, separated by commas'}),
         }
 
     def clean_title(self):
@@ -24,7 +28,7 @@ class PostForm(forms.ModelForm):
         if len(title) < 5:
             raise forms.ValidationError('Title must be at least 5 characters long.')
         return title
-    
+
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment

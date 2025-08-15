@@ -61,43 +61,58 @@ def profile(request):
     return render(request, 'blog/profile.html', {'user': request.user, 'profile': profile})
 
 # List all posts
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.urls import reverse_lazy
+from django.contrib import messages
+from django.http import Http404
+from django.db.models import Q
+from .models import Post, Comment
+from .forms import PostForm, CommentForm
+
+# Post Views
 class PostListView(ListView):
     model = Post
     template_name = 'blog/post_list.html'
     context_object_name = 'posts'
-    ordering = ['-published_date']  # Newest posts first
+    ordering = ['-published_date']
 
-# View a single post
 class PostDetailView(DetailView):
     model = Post
     template_name = 'blog/post_detail.html'
     context_object_name = 'post'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['comment_form'] = CommentForm()
+        return context
+
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
     template_name = 'blog/post_form.html'
     form_class = PostForm
-    success_url = reverse_lazy('post_list')
 
     def form_valid(self, form):
         form.instance.author = self.request.user
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        messages.success(self.request, 'Post created successfully!')
+        return response
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
     template_name = 'blog/post_form.html'
     form_class = PostForm
-    success_url = reverse_lazy('post_list')
 
     def form_valid(self, form):
         form.instance.author = self.request.user
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        messages.success(self.request, 'Post updated successfully!')
+        return response
 
     def test_func(self):
         post = self.get_object()
         return self.request.user == post.author
 
-# Delete a post
 class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Post
     template_name = 'blog/post_confirm_delete.html'
@@ -110,7 +125,7 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Post deleted successfully!')
         return super().delete(request, *args, **kwargs)
-    
+
 # Comment Views
 class CommentCreateView(LoginRequiredMixin, CreateView):
     model = Comment
@@ -118,8 +133,11 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
     template_name = 'blog/comment_form.html'
 
     def form_valid(self, form):
+        try:
+            form.instance.post = Post.objects.get(pk=self.kwargs['post_id'])
+        except Post.DoesNotExist:
+            raise Http404("Post does not exist")
         form.instance.author = self.request.user
-        form.instance.post = Post.objects.get(pk=self.kwargs['post_id'])
         response = super().form_valid(form)
         messages.success(self.request, 'Comment added successfully!')
         return response
@@ -150,6 +168,13 @@ class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context['post_id'] = self.get_object().post.pk
         return context
+
+    def get_object(self, queryset=None):
+        try:
+            return super().get_object(queryset)
+        except Comment.DoesNotExist:
+            raise Http404("Comment does not exist")
+
 class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Comment
     template_name = 'blog/comment_confirm_delete.html'
@@ -164,3 +189,38 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Comment deleted successfully!')
         return super().delete(request, *args, **kwargs)
+
+# Tag and Search Views
+class TagListView(ListView):
+    model = Post
+    template_name = 'blog/tag_list.html'
+    context_object_name = 'posts'
+
+    def get_queryset(self):
+        tag = self.kwargs['tag_name']
+        return Post.objects.filter(tags__name=tag)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tag_name'] = self.kwargs['tag_name']
+        return context
+
+class SearchView(ListView):
+    model = Post
+    template_name = 'blog/search_results.html'
+    context_object_name = 'posts'
+
+    def get_queryset(self):
+        query = self.request.GET.get('q')
+        if query:
+            return Post.objects.filter(
+                Q(title__icontains=query) |
+                Q(content__icontains=query) |
+                Q(tags__name__icontains=query)
+            ).distinct()
+        return Post.objects.none()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['query'] = self.request.GET.get('q', '')
+        return context
