@@ -36,6 +36,23 @@ header nav ul li a {
     margin: 20px;
 }
 
+article {
+    margin-bottom: 20px;
+}
+article h3 {
+    color: #333;
+}
+form button {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+}
+form button:hover {
+    background-color: #555;
+}
+
 footer {
     text-align: center;
     margin-top: 50px;
