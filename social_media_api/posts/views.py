@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from .models import Like
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import permissions
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10
@@ -55,7 +55,7 @@ class CommentViewSet(viewsets.ModelViewSet):
             instance.delete()
             
 class FeedView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request):
         following = request.user.following.all()
@@ -66,7 +66,7 @@ class FeedView(APIView):
         return paginator.get_paginated_response(serializer.data)
     
 class LikeView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     
     def post(self, request, pk):
         try:
@@ -86,7 +86,7 @@ class LikeView(APIView):
             return Response({'error': 'Post not found'}, status=status.HTTP_404_NOT_FOUND)
 
 class UnlikeView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     
     def post(self, request, pk):
         try:
