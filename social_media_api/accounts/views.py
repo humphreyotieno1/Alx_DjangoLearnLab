@@ -7,6 +7,7 @@ from .serializers import RegisterSerializer, UserSerializer
 from django.contrib.auth import authenticate
 from rest_framework.permissions import IsAuthenticated
 from .models import CustomUser
+from rest_framework import generics
 
 class RegisterView(APIView):
     def post(self, request):
@@ -39,10 +40,10 @@ class ProfileView(APIView):
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
-    
-class FollowView(APIView):
+
+class FollowUserView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
-    
+
     def post(self, request, user_id):
         try:
             user_to_follow = CustomUser.objects.get(id=user_id)
@@ -53,9 +54,9 @@ class FollowView(APIView):
         except CustomUser.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
-class UnfollowView(APIView):
+class UnfollowUserView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
-    
+
     def post(self, request, user_id):
         try:
             user_to_unfollow = CustomUser.objects.get(id=user_id)
@@ -63,19 +64,3 @@ class UnfollowView(APIView):
             return Response({'status': f'Unfollowed {user_to_unfollow.username}'})
         except CustomUser.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-
-class FollowersView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        followers = request.user.followers.all()
-        serializer = UserSerializer(followers, many=True)
-        return Response(serializer.data)
-
-class FollowingView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        following = request.user.following.all()
-        serializer = UserSerializer(following, many=True)
-        return Response(serializer.data)
