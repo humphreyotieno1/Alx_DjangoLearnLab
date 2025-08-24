@@ -59,7 +59,7 @@ class FeedView(APIView):
     
     def get(self, request):
         following = request.user.following.all()
-        posts = Post.objects.filter(author__in=following).order_by
+        posts = Post.objects.filter(author__in=following_users).order_by
         paginator = StandardResultsSetPagination()
         page = paginator.paginate_queryset(posts, request)
         serializer = PostSerializer(page, many=True, context={'request': request})
