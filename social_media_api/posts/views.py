@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from .models import Like
-from rest_framework import permissions
+from rest_framework import permissions, generics
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10
@@ -64,6 +64,14 @@ class FeedView(APIView):
         page = paginator.paginate_queryset(posts, request)
         serializer = PostSerializer(page, many=True, context={'request': request})
         return paginator.get_paginated_response(serializer.data)
+    
+
+class LikeView(generics.CreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = LikeSerializer
+
+    def get_object(self):
+        return get_object_or_404(Post, pk=self.kwargs['pk'])
     
 class LikeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
