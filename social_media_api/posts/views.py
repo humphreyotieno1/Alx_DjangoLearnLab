@@ -71,7 +71,7 @@ class LikeView(generics.CreateAPIView):
     serializer_class = LikeSerializer
 
     def get_object(self):
-        return get_object_or_404(Post, pk=self.kwargs['pk'])
+        return generics.get_object_or_404(Post, pk=self.kwargs['pk'])
     
 class LikeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
