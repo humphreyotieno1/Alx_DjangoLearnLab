@@ -46,7 +46,7 @@ class FollowUserView(generics.GenericAPIView):
 
     def post(self, request, user_id):
         try:
-            user_to_follow = CustomUser.objects.get(id=user_id)
+            user_to_follow = CustomUser.objects.all()
             if user_to_follow != request.user:
                 request.user.following.add(user_to_follow)
                 return Response({'status': f'Now following {user_to_follow.username}'})
