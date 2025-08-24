@@ -63,3 +63,19 @@ class UnfollowView(APIView):
             return Response({'status': f'Unfollowed {user_to_unfollow.username}'})
         except CustomUser.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+class FollowersView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        followers = request.user.followers.all()
+        serializer = UserSerializer(followers, many=True)
+        return Response(serializer.data)
+
+class FollowingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        following = request.user.following.all()
+        serializer = UserSerializer(following, many=True)
+        return Response(serializer.data)
